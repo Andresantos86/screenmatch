@@ -20,6 +20,7 @@ public class Principal {
   private List<DadosSerie> dadosSerie = new ArrayList<>();
   private List<Serie> series = new ArrayList<>();
   private SerieRepository serieRepository;
+  private Optional<Serie> serieBuscada;
 
   public Principal (SerieRepository serieRepository){
     this.serieRepository = serieRepository;
@@ -141,7 +142,7 @@ public class Principal {
   private void listarSeriePorTitulo() {
     System.out.println("Escolha uma serie por nome");
     var nomeSerie = leitura.nextLine();
-    Optional<Serie> serieBuscada = serieRepository.findByTituloContainingIgnoreCase(nomeSerie);
+    serieBuscada = serieRepository.findByTituloContainingIgnoreCase(nomeSerie);
 
     if(serieBuscada.isPresent()){
       System.out.println("Dados da serie: "+serieBuscada.get());
@@ -178,4 +179,40 @@ public class Principal {
       seriesCategoria.forEach(System.out::println);
     }
   }
+
+  private void buscaEpisodioPorTrecho(){
+    System.out.println("Qual o nome do episodio para buscar?");
+    var nomeEpisodio = leitura.nextLine();
+    List<Episodio> episodiosEncontrados = serieRepository.episodioPorTrecho(nomeEpisodio);
+    episodiosEncontrados.forEach(e ->
+            System.out.printf("Série: %s Temporada %s - Episódio %s - %s\n",
+                    e.getSerie().getTitulo(), e.getTemporada(),
+                    e.getNumeroEpisodio(), e.getTitulo()));
+  }
+
+  private void topEpisodiosPorSerie(){
+    listarSeriePorTitulo();
+    if(serieBuscada.isPresent()) {
+      Serie serie = serieBuscada.get();
+      List<Episodio> topEpisodios = serieRepository.topEpisodiosPorSerie(serie);
+      topEpisodios.forEach(e ->
+              System.out.printf("Série: %s Temporada %s - Episódio %s - %s Avaliação %s\n",
+                      e.getSerie().getTitulo(), e.getTemporada(),
+                      e.getNumeroEpisodio(), e.getTitulo(), e.getAvaliacao()));
+    }
+  }
+
+  private void buscarEpisodiosDepoisDeUmaData(){
+    listarSeriePorTitulo();
+    if(serieBuscada.isPresent()){
+      Serie serie = serieBuscada.get();
+      System.out.println("Digite o ano limite de lançamento");
+      var anoLancamento = leitura.nextInt();
+      leitura.nextLine();
+
+      List<Episodio> episodiosAno = serieRepository.episodiosPorSerieEAno(serie, anoLancamento);
+      episodiosAno.forEach(System.out::println);
+    }
+  }
+
 }
